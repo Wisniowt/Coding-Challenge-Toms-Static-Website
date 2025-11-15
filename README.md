@@ -1,6 +1,10 @@
 # Coding-Challenge-Toms-Static-Website
 Coding Challenge - 15/11/2025 2pm - Time Start!
 
+Two webistes available:
+PROD: dee5jv3ukeuf2.cloudfront.net
+DEV: d3p0i3zcs69be8.cloudfront.net
+
 # The challenge
 There's a new product being planned and it requires a new website and the requisite infrastructure to support it.
 
@@ -233,6 +237,18 @@ Once the CI is in place this will be redundant.
                         ],
                         "Resource": "*"
                     },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutAccountPublicAccessBlock",
+                            "s3:GetAccountPublicAccessBlock",
+                            "s3:PutBucketPublicAccessBlock",
+                            "s3:GetBucketPublicAccessBlock"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
                 ]
             }
         `
@@ -246,8 +262,9 @@ Once the CI is in place this will be redundant.
             - PROD_ROLE_ARN - The ARN of the prod role you created in step 3 found in IAM Roles tab
 
     5. Now please update any reference to \<329599628498\> which is my AWS account to your AWS account. 
-    6. After doing so create a PR and run the deploy_terraform_infrastructure.yml workflow to create the S3 buckets with least privelage.
-    7. When you open up the PR the CI will run and automatically create the AWS CloudFront for the webiste in your AWS account.
+    6. After doing so create a PR and run the deploy_terraform_infrastructure.yml workflow to create the S3 buckets with least privelage and the CloudFront for you. The website will not work yet.
+    7. When you open up the PR the CI will run and automatically and attempt to push the html file into the buckets. This will fail if you have not yet ran step "6". If thats the case re-run the failed workflow after the AWS resources have been created. The workflow should pass and show green.
+    8. If the two workflows are successful in deploying the resources and the website you can go to your AWS Account -> CloudFront -> Distributions -> Find the distribution you want to view (Dev or Prod) -> Click on the Distribution and find the URL for it.
 
 
 # Alternative Solutions - Could Take but Didn't
@@ -271,6 +288,8 @@ Unfortuantely the github actions terraform integration took a significant portio
 5. AWS WAF - Implementing this would mean we could implement rate-limitng and protect us from DDoS attack. As well as XSS or SQLInjection later in the future if the website is built out into a bigger product with a backend.
 
 6. Route53 - Give the webiste a proper domain rather than the generic cloud front.
+
+7. Website Deployment - Improve CI output to return the URL of the created CloudFront CDN so it does not have to be found in the AWS Account UI.
 
 # Production Website Requierments
 
