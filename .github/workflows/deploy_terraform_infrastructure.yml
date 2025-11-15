@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
@@ -24,8 +24,11 @@ jobs:
           role-to-assume: ${{ secrets.PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Initialize Terraform
-        run: terraform init
+      - name: Perform Terraform
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
 
       - name: Success Message
-        run: echo "Terraform initialized successfully."
+        run: echo "Terraform successfully deployed Buckets!" >> $GITHUB_STEP_SUMMARY
