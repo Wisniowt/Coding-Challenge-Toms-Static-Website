@@ -34,12 +34,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           aws s3 sync ./website-files s3://${{ vars.DEV_BUCKET }}
-          echo "Website synced to Dev S3 Bucket."
-          echo "Webiste avaialble at http://${{ vars.DEV_BUCKET }}.s3-website-${{ vars.AWS_REGION }}.amazonaws.com"
 
       - name: Sync site to S3 (prod)
         if: ${{ github.ref_name == github.event.repository.default_branch }}
         run: |
           aws s3 sync ./website-files s3://${{ vars.PROD_BUCKET }}
-          echo "Website synced to Prod S3 Bucket."
-          echo "Webiste avaialble at http://${{ vars.PROD_BUCKET }}.s3-website-${{ vars.AWS_REGION }}.amazonaws.com"

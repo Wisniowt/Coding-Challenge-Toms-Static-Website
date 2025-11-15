@@ -12,10 +12,10 @@ resource "aws_s3_bucket" "toms_website" {
 resource "aws_s3_account_public_access_block" "account" {
   account_id = "329599628498"
 
-  block_public_acls       = false
-  ignore_public_acls      = false
-  block_public_policy     = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_public_access_block" "toms_website_public_block" {
@@ -23,10 +23,10 @@ resource "aws_s3_bucket_public_access_block" "toms_website_public_block" {
 
   bucket = each.value.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_policy" "toms_website_policy" {
@@ -37,11 +37,16 @@ resource "aws_s3_bucket_policy" "toms_website_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${each.value.arn}/*"
+        Sid    = "AllowCloudFrontServiceOnly"
+        Effect = "Allow"
+        Principal = { Service = "cloudfront.amazonaws.com" }
+        Action = "s3:GetObject"
+        Resource = "${each.value.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.prod[each.key].arn
+          }
+        }
       }
     ]
   })
