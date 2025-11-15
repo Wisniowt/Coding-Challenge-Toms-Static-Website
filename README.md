@@ -38,7 +38,130 @@ Once the CI is in place this will be redundant.
 
 # To Run the Project
 
-1. 
+1. Please for the repository.
+2. After creating your AWS account you will posses an Admin IAM User which will allow you to create IAM Roles.
+3. You will need to create 2 roles manually for the CI to work:
+    - Github_Actions_Access_Dev
+        1. Go to AMI then Roles
+        2. Create role with Web Identity then create identity provider.
+        3. In Identity Provider use OpenID Connect. For URL input: https://token.actions.githubusercontent.com
+        4. Audience: Audience: sts.amazonaws.com
+        5. Create the provider.
+        6. Use the created identity provider in Web Identity when creating the Role.
+        7. Again use Audience: sts.amazonaws.com
+        8. Github Organization choose your Github Account name. Then go next.
+        9. You will be prompted to add Permission policies. Find AdministratorAccess and add this policy for now.
+        10. Role name input Github_Actions_Access_Dev.
+        11. For TrustedPolicy you will see this:
+        `
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRoleWithWebIdentity",
+                    "Principal": {
+                        "Federated": "arn:aws:iam::329599628498:oidc-provider/token.actions.githubusercontent.com"
+                    },
+                    "Condition": {
+                        "StringEquals": {
+                            "token.actions.githubusercontent.com:aud": [
+                                "sts.amazonaws.com"
+                            ]
+                        },
+                        "StringLike": {
+                            "token.actions.githubusercontent.com:sub": [
+                                "repo:\<Github User Account\>/*",
+                                "repo:\<Github User Account\>/*"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+        `
+        Please Create the Role find it in IAM and edit the Trust Policy (Trust relationships Tab) it to the following:
+                `
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRoleWithWebIdentity",
+                    "Principal": {
+                        "Federated": "arn:aws:iam::329599628498:oidc-provider/token.actions.githubusercontent.com"
+                    },
+                    "Condition": {
+                        "StringEquals": {
+                            "token.actions.githubusercontent.com:aud": [
+                                "sts.amazonaws.com"
+                            ]
+                        },
+                        "StringLike": {
+                            "token.actions.githubusercontent.com:sub": "repo:\<GITHUB-USER-ACCOUNT\>/\<NAME-OF-THE-FORKED-REPO\>:*"
+                        }
+                    }
+                }
+            ]
+        }
+        `
+        12. Now add permissions to the Role using create-in-line-policy, choose JSON and add the following: 
+            `{
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutBucketPolicy",
+                            "s3:GetBucketPolicy",
+                            "s3:DeleteBucketPolicy",
+                            "s3:PutAccountPublicAccessBlock",
+                            "s3:GetAccountPublicAccessBlock",
+                            "s3:PutBucketPublicAccessBlock",
+                            "s3:GetBucketPublicAccessBlock"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::toms-site-329599628498-dev",
+                            "arn:aws:s3:::toms-site-329599628498-dev/*"
+                        ]
+                    }
+                ]
+            }`
+        13. Call the Policy Toms_Site_Dev_Bucket_Permissions
+        14. REVOKE THE AdministratorAccess GIVEN DURING CREATION OF ROLE!
+        15. Create another Prod Role following steps 10 onwards replacing ever instance of dev with prod. Bucket permissions are the most important and should be:
+        `
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutBucketPolicy",
+                            "s3:GetBucketPolicy",
+                            "s3:DeleteBucketPolicy",
+                            "s3:PutAccountPublicAccessBlock",
+                            "s3:GetAccountPublicAccessBlock",
+                            "s3:PutBucketPublicAccessBlock",
+                            "s3:GetBucketPublicAccessBlock"
+                        ],
+                        "Resource": [
+                            "arn:aws:s3:::toms-site-329599628498-prod",
+                            "arn:aws:s3:::toms-site-329599628498-prod/*"
+                        ]
+                    }
+                ]
+            }
+        `
+    4. In your Github Repo got to Settings then Secrets and variables and finally Actions. In action create the following variables: 
+        - variables: 
+            - DEV_BUCKET - name of the dev bucket being created. Example: toms-site-AWS-ACCOUNT-ID-dev 
+            - PROD_BUCKET - name of the prod bucket being created. Example: toms-site-AWS-ACCOUNT-ID-prod
+            - AWS_REGION - region where you will be deploying your resources to.
+        - secrets:
+            - DEV_ROLE_ARN - The ARN of the dev role you created in step 3 found in IAM Roles tab
+            - PROD_ROLE_ARN - The ARN of the prod role you created in step 3 found in IAM Roles tab
+
 
 # Alternative Solutions - Could Take but Didn't
 
