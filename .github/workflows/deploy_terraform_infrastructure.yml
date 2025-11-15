@@ -31,4 +31,7 @@ jobs:
           terraform apply -auto-approve
 
       - name: Success Message
-        run: echo "Terraform successfully deployed Buckets!" >> $GITHUB_STEP_SUMMARY
+        run: echo "Terraform successfully deployed infrastructure!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Find Website
+        run: echo "Check your website at the CloudFront distribution URL which can be found in your AWS account's CloudFront console." >> $GITHUB_STEP_SUMMARY
