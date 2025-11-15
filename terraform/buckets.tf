@@ -9,15 +9,6 @@ resource "aws_s3_bucket" "toms_website" {
   bucket = "${var.website_name}-${each.key}"
 }
 
-resource "aws_s3_account_public_access_block" "account" {
-  account_id = "329599628498"
-
-  block_public_acls       = true
-  ignore_public_acls      = true
-  block_public_policy     = true
-  restrict_public_buckets = true
-}
-
 resource "aws_s3_bucket_public_access_block" "toms_website_public_block" {
   for_each = aws_s3_bucket.toms_website
 

@@ -215,7 +215,24 @@ Once the CI is in place this will be redundant.
                             "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-prod",
                             "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-prod/*"
                         ]
-                    }
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "cloudfront:CreateDistribution",
+                            "cloudfront:GetDistribution",
+                            "cloudfront:UpdateDistribution",
+                            "cloudfront:DeleteDistribution",
+                            "cloudfront:TagResource",
+                            "cloudfront:CreateOriginAccessControl",
+                            "cloudfront:GetOriginAccessControl",
+                            "cloudfront:UpdateOriginAccessControl",
+                            "cloudfront:DeleteOriginAccessControl",
+                            "cloudfront:ListDistributions",
+                            "cloudfront:ListTagsForResource"
+                        ],
+                        "Resource": "*"
+                    },
                 ]
             }
         `
@@ -235,6 +252,42 @@ Once the CI is in place this will be redundant.
 
 # Alternative Solutions - Could Take but Didn't
 
+The alternative solutions I could've taken but didn't are as follows:
+1. Use an EC2 instead of S3. I did't peruse this approach as it was redundant. The challange involved a static website with some text, no backend or need for any request managment. Ec2 are more expensive than what I did here and would require maintnance in a real world scenario. 
+
+2. Use python and boto3 library to create something simpler rather than terraform and GHA - I could've taken this approach and to be honest maybe it would be a better choice considering the time constraint but I wanted to show off my IaC skills. This is the first time I had to connect terraform to aws through GHA from scratch which probably wasn't the smartest idea and took up quite some time to get the permissions correct. 
+I believe a simple python script could achieve what I've done but I also belive my solution is much more cleaner and reliable. 
+
 # Future Work - If I had more time
 
+Unfortuantely the github actions terraform integration took a significant portion of my time, therefore this section is quite extensive:
+
+1. Dev/Prod - The DEV access role listed in this document till has too many permissions I believe all it needs is ObjectPut permissions for the CI to deploy the website and for Developers to be able to assume the role and push into their buckets, that would be following Least Privelage. Giving more time I would inspect the permissions and revoke the rights.
+
+2. Terraform Sttate - I realised I wasn't saving the state in github action after running the first pipeline. This meant I then had to delete resources manually from the account if I wanted to redeploy again. I should save rge state in a separate S3 bucket (or some form of database) to which the PROD Role has access and allow actions to inspect this file when doing `terraform plan`, this wouldn't cause conflicts like for example attempting to create double resources. This would also allow me to run `terraform detroy` from CI to remove all created resourcs as the PROD Admin user. 
+
+3. Logging - The we do not have any webiste logging at all here, I would add CloudWatch and implement some Alarms based on error rates, possibly add PagerDuty to alarm us if something is going wrong with our webiste. This would also monitor volume and see how well we're dealing with requests which would tell us if we need to scale or improve the caching for example.
+
+5. AWS WAF - Implementing this would mean we could implement rate-limitng and protect us from DDoS attack. As well as XSS or SQLInjection later in the future if the website is built out into a bigger product with a backend.
+
+6. Route53 - Give the webiste a proper domain rather than the generic cloud front.
+
 # Production Website Requierments
+
+For a production Grad-Webiste, we would require:
+
+1. We only have 1 DEV bucket, if many developers started to use the CI I created resources would constantly be overriden. In this scenario we would have to create a bucket for each developer and override their individual assets depending on which PR they are working on assuming we would keep the structure I have here now. With a backend we would need to spin up DEV EC2s for example (maybe spot instances to reduce cost), patch these and then test on them. One such a tool is Cyperss testing which can be integrated into CI.
+Sping up EC2 with all necessary webisite components, let CI test it.
+
+2. Again if we're talking about a more functional webiste we would need a backend to deal with the request coming from customers, for exaample: purhcases, checking stock or delivery. In this scenario we would need a compltely different stack. I could create a web app with several micoservices packeged in docker containers and deployed into EC2 instances and exposed API endpoints for the mentioned functions. With this you would need much more logging per endpoint, more alerting.
+
+3. We would also need a databse to store the transations utilisung RDS and possibly some type of message queue service like Kafka to deal with the traffic. 
+
+4. Include dependancy, code and security scanning utulising tools Renovate, SonarQube and Snyk. Maybe other security scans for our docker images like artifactory x-ray (if thats where we will store our images) or nmap for open ports.
+
+5. Features already mentioned in Future Work section: More Logging, Terraform stored IAM roles, better CI/CD with more building, testing and scanning features.
+
+6. We would definately have to include an API Gatway for authentication and rate-limiting.
+
+7. Finally some disaster recovery tools like PagerDuty to inform us if our webiste or infrasturecture is down and CI for dealing with a hotpatch and rollback situations.
+
