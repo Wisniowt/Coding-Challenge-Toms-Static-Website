@@ -1,0 +1,45 @@
+name: Deploy Webiste to S3
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Dev AWS credentials
+        if: ${{ github.event_name == 'pull_request'}}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.DEV_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Configure Prod AWS credentials
+        if: ${{ github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.PROD_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Sync site to S3 (dev)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          aws s3 sync ./website-files s3://${{ vars.DEV_BUCKET }}
+          echo "Website synced to Dev S3 Bucket."
+          echo "Webiste avaialble at http://${{ vars.DEV_BUCKET }}.s3-website-${{ vars.AWS_REGION }}.amazonaws.com"
+
+      - name: Sync site to S3 (prod)
+        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        run: |
+          aws s3 sync ./website-files s3://${{ vars.PROD_BUCKET }}
+          echo "Website synced to Prod S3 Bucket."
+          echo "Webiste avaialble at http://${{ vars.PROD_BUCKET }}.s3-website-${{ vars.AWS_REGION }}.amazonaws.com"

@@ -61,7 +61,7 @@ Once the CI is in place this will be redundant.
                     "Effect": "Allow",
                     "Action": "sts:AssumeRoleWithWebIdentity",
                     "Principal": {
-                        "Federated": "arn:aws:iam::329599628498:oidc-provider/token.actions.githubusercontent.com"
+                        "Federated":"arn:aws:iam::<AWS-ACCOUNT-ID>:oidc-provider/token.actions.githubusercontent.com"
                     },
                     "Condition": {
                         "StringEquals": {
@@ -89,7 +89,7 @@ Once the CI is in place this will be redundant.
                     "Effect": "Allow",
                     "Action": "sts:AssumeRoleWithWebIdentity",
                     "Principal": {
-                        "Federated": "arn:aws:iam::329599628498:oidc-provider/token.actions.githubusercontent.com"
+                        "Federated": "arn:aws:iam::<AWS-ACCOUNT-ID>:oidc-provider/token.actions.githubusercontent.com"
                     },
                     "Condition": {
                         "StringEquals": {
@@ -153,8 +153,8 @@ Once the CI is in place this will be redundant.
                             "s3:GetBucketObjectLockConfiguration"
                         ],
                         "Resource": [
-                            "arn:aws:s3:::toms-site-329599628498-dev",
-                            "arn:aws:s3:::toms-site-329599628498-dev/*"
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-dev",
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-dev/*"
                         ]
                     }
                 ]
@@ -210,10 +210,10 @@ Once the CI is in place this will be redundant.
                             "s3:GetBucketObjectLockConfiguration"
                         ],
                         "Resource": [
-                            "arn:aws:s3:::toms-site-329599628498-dev",
-                            "arn:aws:s3:::toms-site-329599628498-dev/*"
-                            "arn:aws:s3:::toms-site-329599628498-prod",
-                            "arn:aws:s3:::toms-site-329599628498-prod/*"
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-dev",
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-dev/*"
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-prod",
+                            "arn:aws:s3:::toms-site-<AWS-ACCOUNT-ID>-prod/*"
                         ]
                     }
                 ]
@@ -227,6 +227,10 @@ Once the CI is in place this will be redundant.
         - secrets:
             - DEV_ROLE_ARN - The ARN of the dev role you created in step 3 found in IAM Roles tab
             - PROD_ROLE_ARN - The ARN of the prod role you created in step 3 found in IAM Roles tab
+
+    5. Now please update any reference to \<329599628498\> which is my AWS account to your AWS account. 
+    6. After doing so create a PR and run the deploy_terraform_infrastructure.yml workflow to create the S3 buckets with least privelage.
+    7. When you open up the PR the CI will run and automatically create the AWS CloudFront for the webiste in your AWS account.
 
 
 # Alternative Solutions - Could Take but Didn't
